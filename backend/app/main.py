@@ -1,4 +1,8 @@
 import logging
+from pathlib import Path
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi import HTTPException
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -95,6 +99,40 @@ def create_app() -> FastAPI:
     app.include_router(contact.router)
     app.include_router(resources.router)
     app.include_router(guidance.router)
+    # Mount frontend static files if production build exists
+    root_dist = Path(__file__).resolve().parent.parent.parent / "dist"
+    backend_dist = Path(__file__).resolve().parent.parent / "dist"
+    frontend_dist = root_dist if root_dist.exists() else backend_dist
+    index_file = frontend_dist / "index.html"
+
+    if frontend_dist.exists() and index_file.exists():
+        assets_dir = frontend_dist / "assets"
+        if assets_dir.exists():
+            app.mount(
+                "/assets",
+                StaticFiles(directory=assets_dir),
+                name="frontend-assets",
+            )
+
+        @app.get("/", include_in_schema=False)
+        async def frontend_home():
+            return FileResponse(index_file)
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def frontend_routes(full_path: str):
+            if full_path.startswith(("api/", "api")) or full_path in {"docs", "openapi.json", "redoc"}:
+                raise HTTPException(status_code=404, detail="Not Found")
+
+            requested_file = (frontend_dist / full_path).resolve()
+            if (
+                full_path
+                and requested_file.is_file()
+                and requested_file.is_relative_to(frontend_dist.resolve())
+            ):
+                return FileResponse(requested_file)
+
+            return FileResponse(index_file)
+
     return app
 
 

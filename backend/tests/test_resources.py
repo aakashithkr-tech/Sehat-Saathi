@@ -24,6 +24,7 @@ def test_filter_by_kind_category_language(client, seeded):
 
 def test_search(client, seeded):
     assert ids(client.get("/api/v1/resources", params={"search": "WATER"})) == {"r2"}
+    assert ids(client.get("/api/v1/resources", params={"search": "108"})) == {"r3"}
     assert ids(client.get("/api/v1/resources", params={"search": "zzz-nothing"})) == set()
     # SQL wildcards are matched literally, not as patterns
     assert ids(client.get("/api/v1/resources", params={"search": "%"})) == set()

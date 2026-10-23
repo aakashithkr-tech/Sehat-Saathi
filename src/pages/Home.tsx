@@ -207,11 +207,11 @@ function HeroPreview() {
           </span>
           <Icon name="arrow" size={18} />
         </Link>
-        <Link to="/resources?tab=care" className="preview-row">
-          <IconBadge name="pin" tone="blue" />
+        <Link to="/resources?need=emergency" className="preview-row">
+          <IconBadge name="shield" tone="teal" />
           <span>
-            <b>Access to care</b>
-            <small>Find services and support</small>
+            <b>Smart Care Finder</b>
+            <small>Match healthcare needs to verified care</small>
           </span>
           <Icon name="arrow" size={18} />
         </Link>

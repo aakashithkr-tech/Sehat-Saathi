@@ -68,7 +68,7 @@ def seeded(Session):
             [
                 Resource(id="r1", kind="information", title="Handwashing basics", summary="How to wash hands", category="Hygiene", language="en", source="test"),
                 Resource(id="r2", kind="information", title="Safe water", summary="Keeping water clean", category="Hygiene", language="hi", source="test"),
-                Resource(id="r3", kind="care", title="Test clinic", summary="A test care entry", category="Clinic", language="en", location="Testville", source="test", url="https://example.org/x"),
+                Resource(id="r3", kind="care", title="Test clinic", summary="A test care entry", category="Clinic", language="en", location="Testville", source="test", url="https://example.org/x", contact="108"),
                 Resource(id="r4", kind="care", title="Hidden entry", summary="inactive", category="Clinic", language="en", source="test", active=False),
                 Resource(id="r5", kind="care", title="Bad link", summary="unsafe url", category="Clinic", language="en", source="test", url="javascript:alert(1)"),
             ]

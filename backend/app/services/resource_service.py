@@ -23,7 +23,7 @@ def _filters(kind: str | None, category: str | None, language: str | None, searc
     if search and search.strip():
         like = f"%{_esc(search.strip())}%"
         conds.append(
-            or_(*(col.ilike(like, escape="\\") for col in (Resource.title, Resource.summary, Resource.category, Resource.provider, Resource.location)))
+            or_(*(col.ilike(like, escape="\\") for col in (Resource.title, Resource.summary, Resource.category, Resource.provider, Resource.location, Resource.contact)))
         )
     return conds
 

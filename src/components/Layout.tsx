@@ -8,6 +8,8 @@ const TITLES: Record<string, string> = {
   "/about": "About — Sehat Saathi",
   "/features": "Features — Sehat Saathi",
   "/how-it-works": "How it works — Sehat Saathi",
+  "/facilities": "Find Healthcare Facilities — Sehat Saathi",
+  "/guidance": "Symptom & Health Guidance — Sehat Saathi",
   "/resources": "Health resources — Sehat Saathi",
   "/contact": "Contact and help — Sehat Saathi",
 };

@@ -18,6 +18,7 @@ export default function Resources() {
   const tab: ResourceKind = params.get("tab") === "care" ? "care" : "information";
   const q = params.get("q") ?? "";
   const category = params.get("category") ?? "";
+  const location = params.get("location") ?? "";
 
   const update = (next: Record<string, string>) => {
     const p = new URLSearchParams(params);
@@ -30,11 +31,11 @@ export default function Resources() {
 
   const categories = useCategories(tab).map((c) => c.name);
   const activeCategory = category;
-  const { state, retry, loadMore, searching } = useResources(tab, q, category);
+  const { state, retry, loadMore, searching } = useResources(tab, q, category, location);
   const results = state.status === "ready" ? state.items : [];
   const hasSample = results.some((r) => r.is_sample);
 
-  const filtered = Boolean(q.trim() || activeCategory);
+  const filtered = Boolean(q.trim() || activeCategory || location.trim());
   const tabLabel = TABS.find((t) => t.id === tab)!;
 
   const onTabKey = (e: React.KeyboardEvent, i: number) => {
@@ -85,25 +86,45 @@ export default function Resources() {
         </div>
 
         <div id="resource-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
-          <form className="searchbar" role="search" onSubmit={(e) => e.preventDefault()}>
-            <label htmlFor="q" className="sr-only">
-              Search {tabLabel.empty}
-            </label>
-            <Icon name="search" size={20} strokeWidth={1.8} />
-            <input
-              id="q"
-              type="search"
-              value={q}
-              placeholder="Search a topic or service"
-              autoComplete="off"
-              onChange={(e) => update({ q: e.target.value })}
-            />
-            {q && (
-              <button type="button" className="clear" onClick={() => update({ q: "" })}>
-                Clear
-              </button>
-            )}
-          </form>
+          <div style={{ display: "flex", gap: "10px", maxWidth: "720px", margin: "0 auto", flexWrap: "wrap" }}>
+            <form className="searchbar" role="search" onSubmit={(e) => e.preventDefault()} style={{ flex: "2 1 320px" }}>
+              <label htmlFor="q" className="sr-only">
+                Search {tabLabel.empty}
+              </label>
+              <Icon name="search" size={20} strokeWidth={1.8} />
+              <input
+                id="q"
+                type="search"
+                value={q}
+                placeholder={tab === "care" ? "Search hospital, helpline, or service" : "Search a health topic"}
+                autoComplete="off"
+                onChange={(e) => update({ q: e.target.value })}
+              />
+              {q && (
+                <button type="button" className="clear" onClick={() => update({ q: "" })}>
+                  Clear
+                </button>
+              )}
+            </form>
+
+            <div className="searchbar" style={{ flex: "1 1 200px" }}>
+              <Icon name="pin" size={20} strokeWidth={1.8} />
+              <label htmlFor="location-filter" className="sr-only">Filter by location</label>
+              <input
+                id="location-filter"
+                type="search"
+                value={location}
+                placeholder="Location (e.g. Delhi, National)"
+                autoComplete="off"
+                onChange={(e) => update({ location: e.target.value })}
+              />
+              {location && (
+                <button type="button" className="clear" onClick={() => update({ location: "" })}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
 
           {categories.length > 0 && (
             <div className="chips" role="group" aria-label="Filter by category">
@@ -143,11 +164,11 @@ export default function Resources() {
               <StateBox icon="search" title={filtered ? "No matches found" : `No ${tabLabel.empty} yet`}>
                 <p>
                   {filtered
-                    ? "Try a different word, or clear the filters to see everything."
+                    ? "Try a different word or location, or clear the filters to see everything."
                     : `Nothing has been listed under ${tabLabel.empty} yet.`}
                 </p>
                 {filtered && (
-                  <Button variant="line" onClick={() => update({ q: "", category: "" })}>
+                  <Button variant="line" onClick={() => update({ q: "", category: "", location: "" })}>
                     Clear search and filters
                   </Button>
                 )}

@@ -61,3 +61,15 @@ def test_categories_not_shadowed_by_id_route(client, seeded):
 def test_unsafe_urls_are_dropped(client, seeded):
     assert client.get("/api/v1/resources/r5").json()["url"] is None
     assert client.get("/api/v1/resources/r3").json()["url"] == "https://example.org/x"
+
+
+def test_filter_by_location(client, seeded):
+    # r3 has location="Testville"
+    res = client.get("/api/v1/resources", params={"location": "Testville"}).json()
+    assert res["total"] == 1
+    assert res["items"][0]["id"] == "r3"
+    # Search also matches location
+    res_search = client.get("/api/v1/resources", params={"search": "Testville"}).json()
+    assert res_search["total"] == 1
+    assert res_search["items"][0]["id"] == "r3"
+

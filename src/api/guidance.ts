@@ -1,7 +1,15 @@
 import { apiFetch } from "./client";
 
+export type DurationType = "less_than_24h" | "1_to_3_days" | "4_to_14_days" | "more_than_2_weeks" | "unknown";
+export type AgeGroupType = "infant" | "child" | "adult" | "elderly" | "unspecified";
+
 export interface GuidanceIn {
-  query: string;
+  query?: string | null;
+  primary_symptoms?: string[];
+  duration?: DurationType;
+  age_group?: AgeGroupType;
+  is_pregnant?: boolean;
+  location_hint?: string | null;
   language?: string;
   allow_ai_synthesis?: boolean;
 }
@@ -45,6 +53,12 @@ export interface GuidanceOut {
   ai_status: "opted_out" | "not_configured" | "generated" | "failed";
   contains_sample_data: boolean;
   created_at: string;
+
+  // CarePath Intelligence
+  explainable_rationale: string;
+  contraindications: string[];
+  doctor_summary: string;
+  intake_summary: Record<string, unknown>;
 }
 
 export function fetchGuidance(payload: GuidanceIn, signal?: AbortSignal): Promise<GuidanceOut> {

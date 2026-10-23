@@ -38,6 +38,7 @@ export interface ResourceQuery {
   kind: ResourceKind;
   search?: string;
   category?: string;
+  location?: string;
   page?: number;
   pageSize?: number;
 }
@@ -46,8 +47,10 @@ export function fetchResources(q: ResourceQuery, signal?: AbortSignal): Promise<
   const p = new URLSearchParams({ kind: q.kind, page: String(q.page ?? 1), page_size: String(q.pageSize ?? 20) });
   if (q.search?.trim()) p.set("search", q.search.trim());
   if (q.category) p.set("category", q.category);
+  if (q.location?.trim()) p.set("location", q.location.trim());
   return apiFetch<ResourcePage>(`/api/v1/resources?${p}`, { signal });
 }
+
 
 export function fetchCategories(kind: ResourceKind, signal?: AbortSignal): Promise<CategoryCount[]> {
   return apiFetch<CategoryCount[]>(`/api/v1/resources/categories?kind=${kind}`, { signal });

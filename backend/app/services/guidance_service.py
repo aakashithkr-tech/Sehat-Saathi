@@ -71,10 +71,11 @@ TOPIC_KEYWORDS: dict[str, list[str]] = {
     "info-topic-dehydration-ors": [
         "diarrhea", "diarrhoea", "loose motion", "vomiting", "dehydration", "ors",
         "oral rehydration", "dry mouth", "sunken eyes", "watery stool", "stomach bug",
+        "loose_motion_diarrhea",
     ],
     "info-topic-dengue-warning": [
         "dengue", "mosquito", "platelet", "retro-orbital", "eye pain", "breakbone",
-        "high fever body pain", "rash fever", "chills fever",
+        "high fever body pain", "rash fever", "chills fever", "body_aches_joint_pain",
     ],
     "info-topic-maternal-antenatal": [
         "pregnancy", "pregnant", "antenatal", "maternal", "trimester", "fetal",
@@ -90,11 +91,11 @@ TOPIC_KEYWORDS: dict[str, list[str]] = {
     ],
     "info-topic-anemia-nutrition": [
         "anemia", "anaemia", "hemoglobin", "low iron", "pale", "fatigue",
-        "weakness", "ifa", "iron deficiency", "tiredness in women",
+        "weakness", "ifa", "iron deficiency", "tiredness in women", "fatigue_weakness",
     ],
     "info-topic-heatstroke-firstaid": [
         "heat stroke", "heatstroke", "heat exhaustion", "sun stroke", "hot weather",
-        "extreme heat", "dizzy in sun", "heat cramps",
+        "extreme heat", "dizzy in sun", "heat cramps", "dizziness_fainting",
     ],
     "info-topic-tuberculosis-awareness": [
         "tuberculosis", "tb", "coughing for 2 weeks", "cough 2 weeks", "coughing blood",
@@ -106,7 +107,7 @@ TOPIC_ACTIONS: dict[str, list[str]] = {
     "info-topic-dehydration-ors": [
         "Prepare WHO-formula Oral Rehydration Salts (ORS) in clean drinking water and sip continuously after every loose stool.",
         "Continue light nutrition (rice kanji, thin dal, banana, curd) to prevent nutritional depletion.",
-        "Never administer anti-diarrheal medicines to children without pediatric evaluation.",
+        "Never administer anti-diarrheal motility medicines to children without pediatric evaluation.",
         "Seek medical care at a Primary Health Centre if unable to keep fluids down, stool contains blood, or fever is high.",
     ],
     "info-topic-dengue-warning": [
@@ -153,15 +154,19 @@ TOPIC_ACTIONS: dict[str, list[str]] = {
 }
 
 
-def _check_emergency(query_lower: str) -> tuple[bool, str | None]:
+def _check_emergency(text_lower: str, symptoms: list[str]) -> tuple[bool, str | None]:
     for category_name, patterns in EMERGENCY_RULES:
         for p in patterns:
-            if p in query_lower:
+            if p in text_lower or (p.replace(" ", "_") in symptoms):
                 notice = (
-                    f"CRITICAL EMERGENCY ALERT ({category_name}): Symptoms may indicate a life-threatening medical emergency. "
-                    "Please call national ambulance service 108 or emergency 112 immediately, or go directly to the nearest hospital casualty department."
+                    f"CRITICAL EMERGENCY ALERT ({category_name}): Symptoms indicate potential life-threatening emergency. "
+                    "Please call national ambulance service 108 or emergency 112 immediately, or proceed directly to the nearest hospital casualty department."
                 )
                 return True, notice
+    if "chest_pain" in symptoms:
+        return True, (
+            "CRITICAL EMERGENCY ALERT (Severe Cardiac Crisis): Chest pain requires immediate emergency evaluation to rule out acute coronary syndromes. Call 108/112."
+        )
     return False, None
 
 
@@ -175,7 +180,7 @@ def _tokenize(text: str) -> set[str]:
     return {w for w in words if len(w) > 2 and w not in stop_words}
 
 
-def _score_resource(tokens: set[str], r: Resource) -> int:
+def _score_resource(tokens: set[str], r: Resource, location_hint: str | None = None) -> int:
     score = 0
     text_fields = f"{r.title} {r.category} {r.summary}".lower()
     for tok in tokens:
@@ -185,10 +190,12 @@ def _score_resource(tokens: set[str], r: Resource) -> int:
             score += 3
         elif tok in text_fields:
             score += 1
+    if location_hint and r.location and location_hint.lower() in r.location.lower():
+        score += 6
     return score
 
 
-def _try_ai_synthesis(settings: Settings, query: str, topics: list[GuidanceTopic]) -> tuple[str | None, str]:
+def _try_ai_synthesis(settings: Settings, combined_text: str, topics: list[GuidanceTopic]) -> tuple[str | None, str]:
     """Optional synthesis using Google Gemini API strictly grounded in verified database topics."""
     if not settings.ai_configured:
         return None, "not_configured"
@@ -200,14 +207,14 @@ def _try_ai_synthesis(settings: Settings, query: str, topics: list[GuidanceTopic
         joined_context = "\n\n".join(context_texts)
 
         prompt = (
-            "You are the health education summarizer for Sehat Saathi, a public health access companion.\n"
-            "Synthesize an educational guidance summary for the user's question, strictly conditioned on the verified context below.\n"
+            "You are the health education summarizer for Sehat Saathi, an Indian public health access companion.\n"
+            "Synthesize an educational guidance summary for the user's symptoms, strictly conditioned on the verified context below.\n"
             "RULES:\n"
             "1. Do NOT make definitive medical diagnoses.\n"
             "2. Do NOT prescribe pharmaceutical drugs or dosages.\n"
             "3. Emphasize when to see a qualified doctor.\n"
             "4. Keep the summary under 120 words, compassionate, and clear.\n\n"
-            f"User Question: {query}\n\n"
+            f"User Context & Question: {combined_text}\n\n"
             f"Verified Medical Context:\n{joined_context}\n\n"
             "Educational Summary:"
         )
@@ -238,26 +245,129 @@ def _try_ai_synthesis(settings: Settings, query: str, topics: list[GuidanceTopic
         return None, "failed"
 
 
+def _generate_doctor_summary(
+    intake_data: dict,
+    urgency: str,
+    emergency: bool,
+    rationale: str,
+    contraindications: list[str],
+    actions: list[str],
+    topics: list[GuidanceTopic],
+    care: list[GuidanceCare],
+) -> str:
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    syms = ", ".join(intake_data.get("primary_symptoms", [])) or "Free-form query only"
+    age = intake_data.get("age_group", "unspecified").capitalize()
+    dur = intake_data.get("duration", "unknown").replace("_", " ")
+    preg = "Yes" if intake_data.get("is_pregnant") else "No"
+    notes = intake_data.get("query") or "None"
+
+    lines = [
+        "=======================================================",
+        "SEHAT SAATHI — CAREPATH CLINICAL SUMMARY & DOCTOR HANDOVER",
+        f"Generated: {now_str} | Platform: Sehat Saathi",
+        "-------------------------------------------------------",
+        "PATIENT INTAKE CONTEXT:",
+        f"  - Age Group: {age}",
+        f"  - Pregnancy Context: {preg}",
+        f"  - Reported Duration: {dur}",
+        f"  - Primary Symptoms: {syms}",
+        f"  - Patient Notes: {notes}",
+        "",
+        "AUTOMATED SAFETY & TRIAGE EVALUATION:",
+        f"  - Urgency Level: {urgency.replace('_', ' ').upper()}",
+        f"  - Emergency Red-Flags: {'DETECTED' if emergency else 'None detected in intake'}",
+        f"  - Explainable Clinical Rationale: {rationale}",
+    ]
+
+    if contraindications:
+        lines.append("")
+        lines.append("CONTRAINDICATIONS & SAFETY WARNINGS:")
+        for c in contraindications:
+            lines.append(f"  * {c}")
+
+    lines.append("")
+    lines.append("RECOMMENDED NEXT ACTIONS:")
+    for a in actions[:3]:
+        lines.append(f"  1. {a}")
+
+    if care:
+        lines.append("")
+        lines.append("LOCAL CARE REFERRALS:")
+        for item in care[:3]:
+            contact_str = f" (Contact: {item.contact})" if item.contact else ""
+            lines.append(f"  * {item.title}{contact_str}")
+
+    lines.extend([
+        "",
+        "DISCLAIMER FOR CLINICIANS:",
+        "This automated summary is compiled from self-reported patient intake and does",
+        "not constitute a medical history or diagnosis. Verify all symptoms clinically.",
+        "=======================================================",
+    ])
+    return "\n".join(lines)
+
+
 def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> GuidanceOut:
-    raw_query = payload.query
-    query_lower = raw_query.lower()
+    # 1. Build combined clinical text
+    parts: list[str] = []
+    if payload.query:
+        parts.append(payload.query)
+    if payload.primary_symptoms:
+        parts.append(" ".join(payload.primary_symptoms).replace("_", " "))
+    if payload.duration and payload.duration != "unknown":
+        parts.append(f"duration {payload.duration.replace('_', ' ')}")
+    if payload.age_group and payload.age_group != "unspecified":
+        parts.append(f"patient is {payload.age_group}")
+    if payload.is_pregnant:
+        parts.append("pregnant mother antenatal")
 
-    # 1. Emergency Safety Screening (Deterministic Rule Engine)
-    is_emergency, emergency_notice = _check_emergency(query_lower)
+    combined_text = " ".join(parts)
+    text_lower = combined_text.lower()
+    symptoms = [s.lower() for s in payload.primary_symptoms]
 
-    # 2. Keyword & Token Search in Curated Database
-    tokens = _tokenize(raw_query)
+    # 2. Emergency Safety Screening (Deterministic Rule Engine)
+    is_emergency, emergency_notice = _check_emergency(text_lower, symptoms)
 
-    # Pre-select matching topic IDs from predefined mappings
+    # 3. Clinical Red-Flag & Specific Condition Triggers
+    contraindications: list[str] = []
+    explainable_rationale = ""
+
+    # Tuberculosis Screening Rule: cough > 2 weeks
+    has_cough = "cough" in symptoms or "cough" in text_lower
+    cough_chronic = payload.duration == "more_than_2_weeks" or "2 week" in text_lower or "two week" in text_lower or "weeks" in text_lower
+
+    # Dengue / Mosquito Fever Rule
+    is_dengue_suspect = (
+        ("fever" in symptoms and ("body_aches_joint_pain" in symptoms or "skin_rash" in symptoms or "headache" in symptoms))
+        or "dengue" in text_lower
+        or "breakbone" in text_lower
+    )
+
+    # Pediatric Dehydration Rule
+    is_pediatric = payload.age_group in ("infant", "child")
+    has_fluid_loss = "loose_motion_diarrhea" in symptoms or "vomiting" in symptoms or "diarrhea" in text_lower or "loose motion" in text_lower
+
+    # 4. Keyword & Token Search in Curated Database
+    tokens = _tokenize(combined_text)
+
     matched_predefined_ids: set[str] = set()
     for topic_id, keywords in TOPIC_KEYWORDS.items():
-        if any(kw in query_lower for kw in keywords):
+        if any(kw in text_lower for kw in keywords) or any(s in keywords for s in symptoms):
             matched_predefined_ids.add(topic_id)
+
+    if has_cough and cough_chronic:
+        matched_predefined_ids.add("info-topic-tuberculosis-awareness")
+    if is_dengue_suspect:
+        matched_predefined_ids.add("info-topic-dengue-warning")
+    if has_fluid_loss:
+        matched_predefined_ids.add("info-topic-dehydration-ors")
+    if payload.is_pregnant:
+        matched_predefined_ids.add("info-topic-maternal-antenatal")
 
     # Fetch active resources from DB
     conds = [Resource.active.is_(True)]
     if payload.language and payload.language != "en":
-        # Include specific language or fallback to English
         conds.append(or_(Resource.language == payload.language, Resource.language == "en"))
 
     all_resources = db.scalars(select(Resource).where(*conds)).all()
@@ -268,7 +378,7 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
 
     for r in all_resources:
         base_score = 10 if r.id in matched_predefined_ids else 0
-        token_score = _score_resource(tokens, r)
+        token_score = _score_resource(tokens, r, payload.location_hint)
         total_score = base_score + token_score
         if total_score > 0:
             if r.kind == "information":
@@ -282,7 +392,7 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
     matched_info = [r for _, r in scored_info[:4]]
     matched_care = [r for _, r in scored_care[:4]]
 
-    # If emergency, ensure emergency ambulance (108) and emergency tertiary hospital are prioritized
+    # Ensure emergency care (108, AIIMS, Safdarjung) is prioritized in emergencies
     if is_emergency:
         emergency_care = db.scalars(
             select(Resource).where(
@@ -295,12 +405,11 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
                 ),
             )
         ).all()
-        # Merge emergency care at the top
         seen_care_ids = {c.id for c in emergency_care}
         matched_care = list(emergency_care) + [c for c in matched_care if c.id not in seen_care_ids]
         matched_care = matched_care[:4]
 
-    # If no care options matched, supply public helplines (104, 1075)
+    # Supply general helplines (104, 1075) if no care matched
     if not matched_care:
         general_helplines = db.scalars(
             select(Resource).where(
@@ -311,21 +420,59 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
         ).all()
         matched_care = list(general_helplines)
 
-    # 3. Determine Urgency and Match Status
+    # 5. Determine Urgency Level & Clinical Rationale
     has_matching = bool(matched_info or is_emergency)
+
     if is_emergency:
         urgency: Literal["emergency", "seek_consultation", "self_care_education", "unclear"] = "emergency"
+        explainable_rationale = (
+            "Symptoms include acute red-flag indicators (e.g. cardiac, respiratory, neurological, or trauma crisis) "
+            "that require immediate in-person clinical stabilization. Transport must not be delayed."
+        )
+    elif has_cough and cough_chronic:
+        urgency = "seek_consultation"
+        explainable_rationale = (
+            "Under National Tuberculosis Elimination Programme (NTEP) and ICMR Standard Treatment Guidelines, "
+            "a cough persisting for more than 2 weeks requires mandatory sputum microscopy to evaluate for Pulmonary Tuberculosis."
+        )
+        contraindications.append("Do not take over-the-counter cough suppressants that mask symptoms without clinical testing.")
+    elif is_dengue_suspect:
+        urgency = "seek_consultation"
+        explainable_rationale = (
+            "Acute high fever accompanied by severe body aches, headache, or rash requires monitoring for vector-borne infections (Dengue/Chikungunya) "
+            "and platelet count evaluation during the 3 to 7 day critical phase."
+        )
+        contraindications.append(
+            "CRITICAL WARNING: Avoid Aspirin, Ibuprofen, Diclofenac, or other NSAIDs, as they severely increase bleeding risks in suspected Dengue. Use sponge cooling and oral hydration."
+        )
+    elif is_pediatric and has_fluid_loss:
+        urgency = "seek_consultation"
+        explainable_rationale = (
+            "Pediatric fluid depletion from acute diarrhea or vomiting carries a high risk of rapid dehydration in infants and young children. "
+            "Immediate oral rehydration is essential alongside clinical evaluation if oral fluids cannot be retained."
+        )
+        contraindications.append(
+            "Do NOT administer adult anti-diarrheal motility medicines (e.g. loperamide) to infants or children without pediatric prescription."
+        )
+    elif payload.is_pregnant:
+        urgency = "seek_consultation"
+        explainable_rationale = (
+            "Any noticeable health concern or fever during pregnancy warrants in-person evaluation by a healthcare professional "
+            "under the Pradhan Mantri Surakshit Matritva Abhiyan (PMSMA) to ensure maternal and fetal wellbeing."
+        )
     elif has_matching:
-        # Check if matched topic warrants clinical consultation
         consultation_topics = {"info-topic-dengue-warning", "info-topic-tuberculosis-awareness", "info-topic-maternal-antenatal"}
         if any(t.id in consultation_topics for t in matched_info):
             urgency = "seek_consultation"
+            explainable_rationale = "Symptoms match clinical topics that require professional medical verification and diagnostic testing."
         else:
             urgency = "self_care_education"
+            explainable_rationale = "Reported symptoms suggest supportive self-care and fluid hydration, with monitoring if symptoms persist >48 hours."
     else:
         urgency = "unclear"
+        explainable_rationale = "No reliable matching medical educational guidance was found in our verified database for your specific input."
 
-    # 4. Synthesize Actionable Steps
+    # 6. Actionable Next Steps
     suggested_actions: list[str] = []
     if is_emergency:
         suggested_actions.extend([
@@ -333,6 +480,12 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
             "Keep the affected individual calm, seated, or in the recovery position; do not leave them unattended.",
             "Proceed immediately to the nearest hospital casualty or emergency trauma facility.",
             "Do not delay transport for unverified home remedies or over-the-counter self-medication.",
+        ])
+    elif has_cough and cough_chronic:
+        suggested_actions.extend([
+            "Visit your nearest Primary Health Centre (PHC) or Community Health Centre (CHC) for a free sputum test under NTEP.",
+            "Cover your mouth when coughing and maintain cross-ventilation in living spaces.",
+            "Consult the National Tuberculosis Toll-Free Helpline at 1800-11-6666 for diagnosis centres and Ni-kshay nutritional support.",
         ])
     elif has_matching:
         for t in matched_info:
@@ -352,7 +505,7 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
             "If symptoms suddenly worsen or become severe, seek immediate emergency medical care.",
         ])
 
-    # 5. Build Summary (Deterministic or Optional AI-synthesized)
+    # 7. Summary (Deterministic or Optional AI-synthesized)
     topics_out = [GuidanceTopic.model_validate(t) for t in matched_info]
     care_out = [GuidanceCare.model_validate(c) for c in matched_care]
     contains_samples = any(t.is_sample for t in topics_out) or any(c.is_sample for c in care_out)
@@ -362,7 +515,7 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
     summary_text = ""
 
     if payload.allow_ai_synthesis and has_matching and not is_emergency:
-        ai_summary, ai_status = _try_ai_synthesis(settings, raw_query, topics_out)
+        ai_summary, ai_status = _try_ai_synthesis(settings, combined_text, topics_out)
         if ai_summary:
             summary_text = ai_summary
             ai_generated = True
@@ -385,13 +538,35 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
                 "For safe guidance, please consult a registered medical practitioner or call the National Health Helpline at 104 or 1075."
             )
 
-    # Structured logging with sensitive health query privacy preservation:
+    # 8. Generate Doctor Summary Handover Card
+    intake_data = {
+        "query": payload.query,
+        "primary_symptoms": payload.primary_symptoms,
+        "duration": payload.duration,
+        "age_group": payload.age_group,
+        "is_pregnant": payload.is_pregnant,
+        "location_hint": payload.location_hint,
+    }
+
+    doctor_handover = _generate_doctor_summary(
+        intake_data=intake_data,
+        urgency=urgency,
+        emergency=is_emergency,
+        rationale=explainable_rationale,
+        contraindications=contraindications,
+        actions=suggested_actions,
+        topics=topics_out,
+        care=care_out,
+    )
+
+    # Privacy preservation in logs: never log patient symptoms or query
     log.info(
-        "guidance processed lang=%s query_len=%d emergency=%s urgency=%s topics_count=%d care_count=%d ai=%s",
+        "carepath processed lang=%s len=%d emergency=%s urgency=%s sym_count=%d topics=%d care=%d ai=%s",
         payload.language,
-        len(raw_query),
+        len(combined_text),
         is_emergency,
         urgency,
+        len(payload.primary_symptoms),
         len(topics_out),
         len(care_out),
         ai_status,
@@ -411,4 +586,8 @@ def process_guidance(db: Session, settings: Settings, payload: GuidanceIn) -> Gu
         ai_status=ai_status,
         contains_sample_data=contains_samples,
         created_at=datetime.now(timezone.utc),
+        explainable_rationale=explainable_rationale,
+        contraindications=contraindications,
+        doctor_summary=doctor_handover,
+        intake_summary=intake_data,
     )

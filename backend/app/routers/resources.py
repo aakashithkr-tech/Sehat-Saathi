@@ -18,16 +18,25 @@ def list_resources(
     category: str | None = Query(None, max_length=100),
     language: str | None = Query(None, max_length=35),
     search: str | None = Query(None, max_length=100),
+    location: str | None = Query(None, max_length=100),
     page: int = Query(1, ge=1, le=10000),
     page_size: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     rows, total, pages = resource_service.list_resources(
-        db, kind=kind, category=category, language=language, search=search, page=page, page_size=page_size
+        db,
+        kind=kind,
+        category=category,
+        language=language,
+        search=search,
+        location=location,
+        page=page,
+        page_size=page_size,
     )
     return ResourceList(
         items=[ResourceOut.model_validate(r) for r in rows], total=total, page=page, page_size=page_size, pages=pages
     )
+
 
 
 # Must be declared before "/{resource_id}" so "categories" is not treated as an id.

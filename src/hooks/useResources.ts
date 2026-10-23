@@ -19,17 +19,18 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 /** Server-side search/filter. Typing is debounced; `loadMore` appends the next page. */
-export function useResources(kind: ResourceKind, search: string, category: string) {
+export function useResources(kind: ResourceKind, search: string, category: string, location: string = "") {
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const debouncedSearch = useDebounced(search, 300);
+  const debouncedLocation = useDebounced(location, 300);
   const moreCtrl = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
     moreCtrl.current?.abort();
     setState({ status: "loading" });
-    fetchResources({ kind, search: debouncedSearch, category }, ctrl.signal)
+    fetchResources({ kind, search: debouncedSearch, category, location: debouncedLocation }, ctrl.signal)
       .then((r) => setState({ status: "ready", items: r.items, total: r.total, page: r.page, pages: r.pages, loadingMore: false, moreError: false }))
       .catch((e) => {
         if (ctrl.signal.aborted) return;
@@ -39,7 +40,7 @@ export function useResources(kind: ResourceKind, search: string, category: strin
       ctrl.abort();
       moreCtrl.current?.abort();
     };
-  }, [kind, debouncedSearch, category, attempt]);
+  }, [kind, debouncedSearch, category, debouncedLocation, attempt]);
 
   const retry = useCallback(() => setAttempt((a) => a + 1), []);
 
@@ -48,7 +49,7 @@ export function useResources(kind: ResourceKind, search: string, category: strin
     const ctrl = new AbortController();
     moreCtrl.current = ctrl;
     setState({ ...state, loadingMore: true, moreError: false });
-    fetchResources({ kind, search: debouncedSearch, category, page: state.page + 1 }, ctrl.signal)
+    fetchResources({ kind, search: debouncedSearch, category, location: debouncedLocation, page: state.page + 1 }, ctrl.signal)
       .then((r) =>
         setState((cur) =>
           cur.status === "ready"
@@ -60,10 +61,11 @@ export function useResources(kind: ResourceKind, search: string, category: strin
         if (ctrl.signal.aborted) return;
         setState((cur) => (cur.status === "ready" ? { ...cur, loadingMore: false, moreError: true } : cur));
       });
-  }, [state, kind, debouncedSearch, category]);
+  }, [state, kind, debouncedSearch, category, debouncedLocation]);
 
-  return { state, retry, loadMore, searching: search !== debouncedSearch };
+  return { state, retry, loadMore, searching: search !== debouncedSearch || location !== debouncedLocation };
 }
+
 
 export function useCategories(kind: ResourceKind) {
   const [cats, setCats] = useState<CategoryCount[]>([]);

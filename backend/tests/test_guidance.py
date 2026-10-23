@@ -234,3 +234,87 @@ def test_guidance_ai_synthesis_provider_success(client, verified_seeded, setting
         assert data["ai_generated"] is True
         assert data["ai_status"] == "generated"
         assert "AI synthesized educational summary" in data["summary"]
+
+
+def test_carepath_structured_intake_tuberculosis_rule(client, verified_seeded):
+    payload = {
+        "primary_symptoms": ["cough"],
+        "duration": "more_than_2_weeks",
+        "age_group": "adult",
+        "is_pregnant": False,
+    }
+    r = client.post("/api/v1/guidance", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["urgency_level"] == "seek_consultation"
+    assert "Tuberculosis" in data["explainable_rationale"] or "sputum" in data["explainable_rationale"]
+    # Check TB topic and actions
+    topic_ids = [t["id"] for t in data["topics"]]
+    assert "info-topic-tuberculosis-awareness" in topic_ids
+    assert any("sputum" in act.lower() for act in data["suggested_actions"])
+    # Check doctor summary handover card
+    assert "CAREPATH CLINICAL SUMMARY" in data["doctor_summary"]
+    assert "More than 2 weeks" in data["doctor_summary"] or "more than 2 weeks" in data["doctor_summary"].lower()
+
+
+def test_carepath_pediatric_dehydration_and_contraindication(client, verified_seeded):
+    payload = {
+        "primary_symptoms": ["loose_motion_diarrhea", "vomiting"],
+        "duration": "1_to_3_days",
+        "age_group": "child",
+    }
+    r = client.post("/api/v1/guidance", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["urgency_level"] in ("seek_consultation", "self_care_education")
+    assert "pediatric" in data["explainable_rationale"].lower() or "infant" in data["explainable_rationale"].lower()
+    # Contraindication against anti-motility drugs for children
+    assert any("motility" in c.lower() or "loperamide" in c.lower() for c in data["contraindications"])
+    # Doctor handover contains child age and contraindications
+    assert "Child" in data["doctor_summary"]
+    assert "CONTRAINDICATIONS" in data["doctor_summary"]
+
+
+def test_carepath_dengue_nsaid_contraindication(client, verified_seeded):
+    payload = {
+        "primary_symptoms": ["fever", "body_aches_joint_pain", "headache"],
+        "duration": "1_to_3_days",
+        "age_group": "adult",
+    }
+    r = client.post("/api/v1/guidance", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["urgency_level"] == "seek_consultation"
+    # Specific contraindication warning against Aspirin/NSAIDs
+    assert any("aspirin" in c.lower() or "nsaid" in c.lower() for c in data["contraindications"])
+
+
+def test_carepath_maternal_pregnancy_alert(client, verified_seeded):
+    payload = {
+        "primary_symptoms": ["vomiting"],
+        "duration": "1_to_3_days",
+        "age_group": "adult",
+        "is_pregnant": True,
+    }
+    r = client.post("/api/v1/guidance", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert "pregnancy" in data["explainable_rationale"].lower() or "maternal" in data["explainable_rationale"].lower()
+    # Check maternal helpline or hospital referral
+    care_ids = [c["id"] for c in data["care_options"]]
+    assert any("102" in cid or "maternal" in cid or "helpline" in cid for cid in care_ids)
+
+
+def test_carepath_location_hint_boosts_local_facility(client, verified_seeded):
+    payload = {
+        "query": "Need emergency casualty care",
+        "location_hint": "New Delhi",
+    }
+    r = client.post("/api/v1/guidance", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data["care_options"]) > 0
+    # AIIMS or Safdarjung (Delhi tertiary facilities) present
+    delhi_care = [c for c in data["care_options"] if "delhi" in (c.get("location") or "").lower()]
+    assert len(delhi_care) > 0
+

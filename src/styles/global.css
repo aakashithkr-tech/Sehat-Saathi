@@ -344,3 +344,38 @@ main:focus { outline: none; }
 .badge-source { font-size: 12px; color: var(--muted); }
 .ai-note { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); background: #f0f4f7; padding: 4px 10px; border-radius: 8px; }
 
+/* CarePath Intelligence Extensions */
+.symptom-tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 8px; }
+.symptom-pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 999px; border: 1px solid #c5cfd6; background: #fff; font-size: 13.5px; font-weight: 500; color: var(--navy); cursor: pointer; transition: all .16s ease; user-select: none; }
+.symptom-pill:hover { border-color: var(--teal); background: var(--teal-soft); }
+.symptom-pill.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+.symptom-pill.danger { border-color: #f1b8b2; }
+.symptom-pill.danger.active { background: var(--err); border-color: var(--err); color: #fff; }
+.context-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-block: 10px; }
+.context-item label { display: block; font-size: 13px; font-weight: 600; color: var(--text-strong); margin-bottom: 6px; }
+.context-item select, .context-item input { width: 100%; border: 1px solid #cbd5dc; border-radius: 12px; background: var(--bg); padding: 9px 12px; font-size: 14px; }
+.privacy-badge { display: flex; align-items: center; gap: 10px; background: #f4f8fa; border: 1px solid #dbe6ec; border-radius: 14px; padding: 10px 14px; font-size: 13px; color: var(--text); }
+.rationale-box { background: var(--blue-soft); border: 1px solid var(--blue-line); border-radius: 18px; padding: 18px 22px; display: grid; gap: 8px; }
+.rationale-box h4 { font-size: 15px; font-weight: 700; color: var(--blue); letter-spacing: -.01em; }
+.rationale-box p { font-size: 15px; line-height: 1.55; color: var(--navy); }
+.contraindication-card { background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 18px; padding: 18px 22px; display: grid; gap: 8px; }
+.contraindication-card h4 { font-size: 15px; font-weight: 700; color: #9a3412; display: flex; align-items: center; gap: 8px; }
+.contraindication-card ul { margin: 0; padding-left: 18px; list-style: disc; display: grid; gap: 6px; }
+.contraindication-card li { font-size: 14.5px; line-height: 1.5; color: #7c2d12; font-weight: 500; }
+.doctor-handover { background: #162432; color: #e2e8f0; border-radius: 20px; padding: 22px 24px; display: grid; gap: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.doctor-handover-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(255, 255, 255, .15); padding-bottom: 12px; }
+.doctor-handover-title { font-size: 14px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: .05em; }
+.doctor-handover pre { margin: 0; font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; color: #f1f5f9; }
+.handover-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.handover-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .1); color: #fff; transition: background .15s; }
+.handover-btn:hover { background: rgba(255, 255, 255, .2); }
+.handover-btn.copied { background: #059669; border-color: #059669; }
+
+@media print {
+  body * { visibility: hidden; }
+  .doctor-handover, .doctor-handover * { visibility: visible; }
+  .doctor-handover { position: absolute; left: 0; top: 0; width: 100%; background: #fff; color: #000; border: 1px solid #ccc; font-family: sans-serif; }
+  .handover-btn-row { display: none; }
+}
+
+

@@ -1,11 +1,21 @@
-/**
- * Shared API client. The base URL comes from VITE_API_BASE_URL.
- * In `vite dev` it falls back to http://localhost:8000; in a production build there is
- * deliberately no fallback, so a missing value surfaces as an actionable error.
- */
-const raw = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "http://localhost:8000" : "");
-export const API_BASE_URL = raw.trim().replace(/\/+$/, "");
-export const apiConfigured = () => API_BASE_URL !== "";
+function resolveBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+  if (typeof window !== "undefined") {
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (isLocal) {
+      // Local dev or preview: use port 8000 (relative if already on port 8000)
+      return window.location.port === "8000" ? "" : "http://127.0.0.1:8000";
+    }
+    // Deployed environment: use envUrl if configured, otherwise use same-origin relative path
+    return envUrl || "";
+  }
+  return envUrl || (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+}
+
+export const API_BASE_URL = resolveBaseUrl();
+export const apiConfigured = () => API_BASE_URL !== "" || (typeof window !== "undefined" && Boolean(window.location.origin));
+
+
 
 export type ApiErrorKind = "not-configured" | "network" | "validation" | "rate-limited" | "not-found" | "server";
 

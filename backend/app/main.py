@@ -12,8 +12,8 @@ from fastapi.responses import JSONResponse
 
 from .config import get_settings
 from .database import SessionLocal, init_db
-from .routers import contact, guidance, health, resources
-from .seed import seed_samples_if_empty, seed_verified_resources
+from .routers import contact, facilities, guidance, health, resources
+from .seed import seed_facilities_if_empty, seed_samples_if_empty, seed_verified_resources
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("sehat")
@@ -32,6 +32,9 @@ async def lifespan(app: FastAPI):
             ns = seed_samples_if_empty(db)
             if ns:
                 log.warning("Loaded %d SAMPLE resources. Replace them with verified data before real use.", ns)
+            nf = seed_facilities_if_empty(db)
+            if nf:
+                log.info("Loaded %d sample healthcare facilities.", nf)
     if not settings.email_configured:
         log.info("SMTP not configured: contact messages are stored but no email is sent.")
     if settings.ai_configured:
@@ -99,6 +102,7 @@ def create_app() -> FastAPI:
     app.include_router(contact.router)
     app.include_router(resources.router)
     app.include_router(guidance.router)
+    app.include_router(facilities.router)
     # Mount frontend static files if production build exists
     root_dist = Path(__file__).resolve().parent.parent.parent / "dist"
     backend_dist = Path(__file__).resolve().parent.parent / "dist"

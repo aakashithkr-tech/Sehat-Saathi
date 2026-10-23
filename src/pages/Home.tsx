@@ -25,7 +25,10 @@ export default function Home() {
             understand.
           </p>
           <div className="cta-row rise d3">
-            <Button to="/guidance" size="lg" arrow>
+            <Button to="/facilities" size="lg" arrow>
+              Find Healthcare Near Me
+            </Button>
+            <Button to="/guidance" variant="line" size="lg">
               Get Health Guidance
             </Button>
             <Button to="/resources" variant="line" size="lg">
@@ -180,6 +183,14 @@ function HeroPreview() {
         <span>Search a topic or service</span>
       </Link>
       <div className="preview-rows">
+        <Link to="/facilities" className="preview-row">
+          <IconBadge name="hospital" tone="blue" />
+          <span>
+            <b>Find Healthcare</b>
+            <small>Nearby hospitals, PHCs & clinics</small>
+          </span>
+          <Icon name="arrow" size={18} />
+        </Link>
         <Link to="/guidance" className="preview-row">
           <IconBadge name="shield" tone="teal" />
           <span>

@@ -4,6 +4,7 @@ export const NAV_LINKS = [
   { to: "/about", label: "About" },
   { to: "/features", label: "Features" },
   { to: "/how-it-works", label: "How it works" },
+  { to: "/facilities", label: "Find Healthcare" },
   { to: "/guidance", label: "Guidance" },
   { to: "/resources", label: "Resources" },
   { to: "/contact", label: "Contact" },
@@ -24,6 +25,16 @@ export interface Feature {
  * Add an entry to show it on the Home and Features pages automatically.
  */
 export const FEATURES: Feature[] = [
+  {
+    id: "facility-finder",
+    title: "Healthcare facilities",
+    summary: "Nearby hospitals, PHCs, clinics & emergency care.",
+    detail:
+      "Locate facilities by PIN code or city with contact details, operating hours, directions, and transparent availability readiness status.",
+    icon: "hospital",
+    tone: "blue",
+    to: "/facilities",
+  },
   {
     id: "health-guidance",
     title: "Health guidance",

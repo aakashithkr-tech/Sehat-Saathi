@@ -55,7 +55,51 @@ def seed_samples_if_empty(db: Session) -> int:
     return upsert(db, _load(SAMPLE_FILE), is_sample=True)
 
 
+FACILITIES_SAMPLE_FILE = Path(__file__).resolve().parent.parent / "data" / "facilities.sample.json"
+
+
+def seed_facilities_if_empty(db: Session) -> int:
+    from .models import Facility
+
+    if db.scalar(select(Facility.id).limit(1)) is not None:
+        return 0
+    if not FACILITIES_SAMPLE_FILE.exists():
+        return 0
+    records = _load(FACILITIES_SAMPLE_FILE)
+    n = 0
+    for rec in records:
+        services = rec.get("services", [])
+        services_str = json.dumps(services) if isinstance(services, list) else str(services)
+        lv = rec.get("last_verified_at")
+        fac = Facility(
+            id=str(rec["id"]),
+            name=rec["name"],
+            facility_type=rec["facility_type"],
+            address=rec["address"],
+            pincode=str(rec["pincode"]),
+            city=rec["city"],
+            state=rec.get("state", ""),
+            latitude=rec.get("latitude"),
+            longitude=rec.get("longitude"),
+            contact=rec.get("contact"),
+            opening_hours=rec.get("opening_hours"),
+            services=services_str,
+            status_label=rec.get("status_label", "Demo data"),
+            is_sample=bool(rec.get("is_sample", True)),
+            exists_in_directory=bool(rec.get("exists_in_directory", True)),
+            doctor_availability=rec.get("doctor_availability"),
+            bed_availability=rec.get("bed_availability"),
+            source=rec.get("source", "DEMO DATA — availability not live-verified"),
+            last_verified_at=datetime.fromisoformat(lv) if lv else None,
+        )
+        db.add(fac)
+        n += 1
+    db.commit()
+    return n
+
+
 def seed_verified_resources(db: Session) -> int:
+
     if not VERIFIED_FILE.exists():
         return 0
     return upsert(db, _load(VERIFIED_FILE), is_sample=False)

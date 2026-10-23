@@ -378,4 +378,425 @@ main:focus { outline: none; }
   .handover-btn-row { display: none; }
 }
 
+/* ========================================================
+   Healthcare Facilities & Availability Feature Styles
+   ======================================================== */
+.facility-demo-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #fff8e8;
+  border: 1.5px solid #f2db9f;
+  border-radius: 20px;
+  padding: 18px 24px;
+  margin-bottom: 28px;
+}
+.facility-demo-notice .notice-icon {
+  color: #b46800;
+  flex: none;
+  margin-top: 2px;
+}
+.facility-demo-notice .notice-content strong {
+  display: block;
+  font-size: 14.5px;
+  color: #834c00;
+  margin-bottom: 4px;
+  letter-spacing: -.01em;
+}
+.facility-demo-notice .notice-content p {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #6d4b14;
+  margin: 0;
+}
+
+.facility-search-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: clamp(20px, 3.5vw, 36px);
+  box-shadow: 0 10px 30px -15px rgba(15, 42, 67, 0.08);
+}
+.facility-search-form {
+  display: grid;
+  gap: 22px;
+}
+.facility-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.2fr;
+  gap: 18px;
+}
+@media (max-width: 860px) {
+  .facility-input-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-with-icon svg:first-child {
+  position: absolute;
+  left: 14px;
+  color: var(--teal);
+  pointer-events: none;
+}
+.input-with-icon input {
+  padding-left: 42px !important;
+  padding-right: 38px !important;
+}
+.input-clear-btn {
+  position: absolute;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2f5;
+  border: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: background .15s ease;
+}
+.input-clear-btn:hover {
+  background: #dce3e8;
+  color: var(--navy);
+}
+
+.label-hint {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.quick-pins-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.quick-pins-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.quick-pins-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.quick-pin-pill {
+  border: 1px solid var(--teal-line);
+  background: var(--teal-soft);
+  color: var(--teal);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .16s ease;
+}
+.quick-pin-pill:hover {
+  background: #d9eded;
+  border-color: var(--teal);
+}
+.quick-pin-pill.active {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+}
+
+.facility-type-filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.filter-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.facility-type-filters .chips {
+  margin: 0;
+}
+
+.form-action-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.facility-results-section {
+  margin-top: 36px;
+}
+.facility-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.results-total-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--teal);
+  background: var(--teal-soft);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--teal-line);
+}
+
+.facility-grid {
+  display: grid;
+  gap: 22px;
+}
+
+.facility-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: clamp(22px, 3.5vw, 34px);
+  display: grid;
+  gap: 18px;
+  box-shadow: 0 4px 18px -4px rgba(15, 42, 67, 0.05);
+}
+.facility-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.facility-title-area {
+  display: grid;
+  gap: 8px;
+}
+.facility-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.facility-type-pill {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.facility-type-pill.tone-blue {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border: 1px solid var(--blue-line);
+}
+.facility-type-pill.tone-teal {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border: 1px solid var(--teal-line);
+}
+.facility-status-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.facility-status-pill.status-demo {
+  background: #fff6e0;
+  color: #8c5800;
+  border: 1px solid #f1dda4;
+}
+.facility-status-pill.status-verified {
+  background: #eafaf1;
+  color: #147a46;
+  border: 1px solid #b7ecd0;
+}
+.facility-name {
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 600;
+  letter-spacing: -.015em;
+  color: var(--navy);
+  margin: 0;
+}
+
+.facility-location-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-strong);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.facility-location-row svg {
+  color: var(--teal);
+  flex: none;
+  margin-top: 3px;
+}
+.facility-address {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.facility-pin-badge {
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #eef2f5;
+  color: var(--navy);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.facility-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px 24px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 18px;
+}
+.facility-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+}
+.facility-meta-item svg {
+  color: var(--teal);
+  flex: none;
+}
+.meta-label {
+  font-weight: 600;
+  color: var(--navy);
+}
+.meta-val {
+  color: var(--text);
+}
+.facility-contact-link {
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.facility-contact-link:hover {
+  color: var(--navy);
+}
+
+.facility-services-block {
+  display: grid;
+  gap: 8px;
+}
+.services-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.services-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.service-tag {
+  font-size: 13px;
+  background: #f0f4f7;
+  color: var(--text-strong);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #dce4e9;
+}
+
+.facility-availability-panel {
+  background: #f7f9fa;
+  border: 1.5px solid #d8e2e8;
+  border-radius: 20px;
+  padding: 18px 22px;
+  display: grid;
+  gap: 14px;
+}
+.availability-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--teal);
+}
+.availability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+}
+@media (max-width: 720px) {
+  .availability-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.availability-cell {
+  display: grid;
+  gap: 3px;
+}
+.cell-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--muted);
+}
+.cell-value {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-strong);
+}
+.cell-value.status-active {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #127442;
+  font-weight: 600;
+}
+.cell-value.text-muted {
+  color: var(--muted);
+}
+.availability-source-note {
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px dashed #cbd5dc;
+  padding-top: 10px;
+}
+
+.facility-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.facility-directions-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.facility-call-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
 

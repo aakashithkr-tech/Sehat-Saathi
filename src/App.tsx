@@ -8,6 +8,7 @@ const Features = lazy(() => import("./pages/Features"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Guidance = lazy(() => import("./pages/Guidance"));
 const Resources = lazy(() => import("./pages/Resources"));
+const Facilities = lazy(() => import("./pages/Facilities"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="about" element={<About />} />
           <Route path="features" element={<Features />} />
           <Route path="how-it-works" element={<HowItWorks />} />
+          <Route path="facilities" element={<Facilities />} />
           <Route path="guidance" element={<Guidance />} />
           <Route path="resources" element={<Resources />} />
           <Route path="contact" element={<Contact />} />

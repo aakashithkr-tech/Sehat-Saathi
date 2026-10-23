@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.venv/
+backend/.venv/
+
+# Production builds
+dist/
+*.tsbuildinfo
+
+# Environment variables & secrets (keep .env.example only)
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Local SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+backend/sehat_saathi.db
+
+# Python bytecode & test caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

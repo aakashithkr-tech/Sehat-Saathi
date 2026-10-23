@@ -1,0 +1,7 @@
+[
+  {"id":"sample-info-1","kind":"information","category":"Sample topic A","title":"Sample information entry 1","summary":"SAMPLE DATA for local development only. Replace with a real, verified resource.","language":"en","source":"Sample data (not a real resource)"},
+  {"id":"sample-info-2","kind":"information","category":"Sample topic B","title":"Sample information entry 2","summary":"SAMPLE DATA for local development only. Replace with a real, verified resource.","language":"en","source":"Sample data (not a real resource)"},
+  {"id":"sample-info-3","kind":"information","category":"Sample topic A","title":"Sample information entry 3","summary":"SAMPLE DATA for local development only. Replace with a real, verified resource.","language":"hi","source":"Sample data (not a real resource)"},
+  {"id":"sample-care-1","kind":"care","category":"Sample service type","title":"Sample care entry 1","summary":"SAMPLE DATA for local development only. This is not a real facility and implies no availability.","language":"en","location":"Sample location","source":"Sample data (not a real facility)"},
+  {"id":"sample-care-2","kind":"care","category":"Sample service type","title":"Sample care entry 2","summary":"SAMPLE DATA for local development only. This is not a real facility and implies no availability.","language":"en","location":"Sample location","source":"Sample data (not a real facility)"}
+]
